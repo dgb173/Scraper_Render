@@ -20,10 +20,9 @@ RUN playwright install chromium
 # Copiar todo el código de la aplicación al contenedor
 COPY . .
 
-# Exponer el puerto en el que la aplicación se ejecutará
+# Exponer un puerto por conveniencia (Render/Fly establecerán $PORT)
 EXPOSE 8080
 
 # Definir el comando para iniciar la aplicación con Gunicorn
-# Fly.io establece el puerto automáticamente a través de la variable $PORT
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "120", "app:app"]
-
+# Usa $PORT si está disponible (Render/Fly), si no, 8080 por defecto
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --timeout 120 app:app"]

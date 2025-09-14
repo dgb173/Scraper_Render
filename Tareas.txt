@@ -1,0 +1,180 @@
+De acuerdo. A continuación, se presenta el protocolo solicitado con la máxima claridad.
+
+Objetivo del Codex
+
+Mi objetivo es proporcionarte un protocolo claro y preciso para desplegar tu aplicación de web scraping en la nube de forma gratuita. Este protocolo identifica los componentes faltantes en tu sistema actual y te guía a través de los pasos exactos para su correcta implementación y puesta en marcha, asegurando el acceso desde cualquier dispositivo móvil.
+
+1. Análisis del Sistema Proporcionado
+
+Componente Principal: Aplicación web basada en Flask.
+
+Funcionalidad Clave: Realiza web scraping intensivo utilizando Playwright y Selenium.
+
+Dependencias Críticas: El sistema requiere no solo librerías de Python, sino también un navegador web (Chromium) para que Playwright/Selenium puedan operar.
+
+Punto Crítico: La ejecución de un navegador consume una cantidad significativa de memoria (RAM). El plan gratuito de las plataformas en la nube es limitado, lo que constituye el principal desafío técnico.
+
+Estado Actual: El código de la aplicación está completo, pero carece de los archivos de configuración necesarios para que una plataforma en la nube pueda construirlo y ejecutarlo.
+
+2. Requisitos para el Despliegue en la Nube
+
+Para que tu proyecto funcione en un servidor, debes añadir los siguientes tres elementos a la carpeta raíz de tu proyecto.
+
+2.1. Archivo de Dependencias de Python (requirements.txt)
+
+Este archivo le indica al servidor qué librerías de Python debe instalar.
+
+Acción: Crea un archivo llamado requirements.txt con el siguiente contenido exacto:
+
+code
+Text
+download
+content_copy
+expand_less
+
+Flask
+gunicorn
+playwright
+beautifulsoup4
+selenium
+pandas
+requests
+pytz
+urllib3
+lxml
+2.2. Comando de Instalación del Navegador
+
+Debes instruir al servidor para que instale el navegador que Playwright necesita. Esto se hará directamente en la configuración de la plataforma.
+
+2.3. Comando de Ejecución del Servidor de Producción
+
+El servidor de desarrollo de Flask (app.run()) no es apto para un entorno real. Se debe usar un servidor WSGI como Gunicorn. Esto también se configurará en la plataforma.
+
+3. Protocolo de Despliegue: Plataforma "Render"
+
+Este es el método recomendado por su simplicidad.
+
+Paso 1: Control de Versiones.
+
+Crea un repositorio en GitHub.
+
+Sube todos los archivos de tu proyecto: app.py, el nuevo requirements.txt, y las carpetas modules y templates.
+
+Paso 2: Creación de Cuenta.
+
+Navega a render.com.
+
+Regístrate utilizando tu cuenta de GitHub.
+
+Paso 3: Configuración del Servicio.
+
+En el panel de Render, haz clic en "New +" -> "Web Service".
+
+Selecciona tu repositorio de GitHub.
+
+Render analizará tu proyecto. Completa la configuración de la siguiente manera:
+
+Name: Un nombre único para tu servicio (ej: codex-scraper).
+
+Runtime: Se seleccionará Python 3 automáticamente.
+
+Build Command: Este es un paso crítico. Combina la instalación de Python y del navegador en una sola línea. Introduce lo siguiente:
+
+code
+Bash
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+pip install -r requirements.txt && playwright install chromium
+
+Start Command: Este comando le dice a Gunicorn cómo iniciar tu aplicación. Introduce lo siguiente:
+
+code
+Bash
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+gunicorn app:app --timeout 120
+
+(Nota: El --timeout 120 es vital, ya que tus tareas de scraping pueden exceder el límite de tiempo por defecto de 30 segundos).
+
+Plan Type: Selecciona la opción Free.
+
+Paso 4: Ejecución y Verificación.
+
+Haz clic en "Create Web Service".
+
+El primer despliegue será lento (5-10 minutos) mientras descarga e instala Chromium. Monitoriza la consola de "Logs".
+
+Cuando el estado cambie a "Deployed", Render te proporcionará una URL pública.
+
+Verificación: Accede a esa URL desde el navegador de tu teléfono móvil. La aplicación se ejecutará en el servidor y te mostrará los resultados.
+
+4. Protocolo de Contingencia: Plataforma "Fly.io"
+
+Activa este protocolo si Render falla por falta de memoria (errores "memory limit exceeded" en los logs). Este método usa Docker para crear un entorno más controlado y robusto.
+
+Paso 1: Crear el Archivo de Entorno (Dockerfile)
+
+En la raíz de tu proyecto, crea un archivo llamado Dockerfile (sin extensión).
+
+Añade el siguiente contenido. Cada línea está comentada para explicar su función.
+
+code
+Dockerfile
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+# Usar una imagen oficial de Python como base
+FROM python:3.11-slim
+
+# Instalar dependencias del sistema operativo necesarias para el navegador
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdbus-1-3 \
+    libdrm2 libgbm1 libgtk-3-0 libasound2
+
+# Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiar el archivo de requisitos e instalar las librerías de Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Instalar el navegador Chromium para Playwright
+RUN playwright install chromium
+
+# Copiar todo el código de la aplicación al contenedor
+COPY . .
+
+# Exponer el puerto en el que la aplicación se ejecutará
+EXPOSE 8080
+
+# Definir el comando para iniciar la aplicación con Gunicorn
+# Fly.io establece el puerto automáticamente a través de la variable $PORT
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--timeout", "120", "app:app"]
+
+Paso 2: Ejecución a través de la Terminal
+
+Instala la herramienta de línea de comandos flyctl desde la web oficial de Fly.io.
+
+Autentícate: fly auth login.
+
+Navega a la carpeta de tu proyecto en tu terminal y ejecuta: fly launch.
+
+Sigue las instrucciones: dale un nombre a la app, elige una región y responde "No" cuando te pregunte si quieres configurar una base de datos.
+
+Finalmente, despliega tu aplicación con el comando: fly deploy.
+
+Directiva Final
+
+Implementa el Protocolo de Despliegue para Render primero. Es la ruta más directa hacia un resultado funcional.
+
+Si durante la ejecución, los logs de Render muestran errores de memoria o timeouts persistentes, significa que el plan gratuito no es suficiente para la carga de tu scraper.
+
+En ese caso, activa el Protocolo de Contingencia para Fly.io, que proporciona un entorno más robusto y con mayores recursos gratuitos, adecuado para aplicaciones que utilizan navegadores.

@@ -25,4 +25,4 @@ EXPOSE 8080
 
 # Definir el comando para iniciar la aplicación con Gunicorn
 # Usa $PORT si está disponible (Render/Fly), si no, 8080 por defecto
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --timeout 120 app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --timeout 120 --workers ${WEB_CONCURRENCY:-2} --threads ${GUNICORN_THREADS:-2} app:app"]

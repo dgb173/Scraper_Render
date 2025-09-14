@@ -187,6 +187,10 @@ def index():
         print(f"ERROR en la ruta principal: {e}")
         return render_template('index.html', matches=[], error=f"No se pudieron cargar los partidos: {e}")
 
+@app.route('/healthz')
+def healthz():
+    return 'ok', 200
+
 @app.route('/api/matches')
 def api_matches():
     try:

@@ -28,7 +28,7 @@ echo [INFO] Instalando y/o actualizando librerias de Python...
 
 :: Instalar dependencias de Python
 py -m pip install --upgrade pip > NUL
-py -m pip install -r requirements.txt
+py -m pip install flask beautifulsoup4 pandas selenium requests lxml playwright
 
 :: Comprobar si hubo un error
 if %errorlevel% neq 0 (
@@ -61,165 +61,41 @@ echo.
 
 
 :: ===================================================================
-
-
-::                    PASO 2 de 3: DESCARGA DE DATOS
-
-
+::                    PASO 2 de 2: EJECUCION
 :: ===================================================================
-
-
 echo.
-
-
-echo [INFO] Ejecutando el scraper para descargar los datos de los partidos...
-
-
-echo [INFO] Esto puede tardar unos segundos.
-
-
-
-
-
-:: Ejecutar el script de scraping
-
-
-py run_scraper.py
-
-
-
-
-
-:: Comprobar si hubo un error
-
-
-if %errorlevel% neq 0 (
-
-
-    echo.
-
-
-    echo [ERROR] Ha ocurrido un error al ejecutar el scraper.
-
-
-    echo         Revisa la salida en la consola para ver el detalle.
-
-
-    echo.
-
-
-    pause
-
-
-    exit /b
-
-
-)
-
-
-
-
-
-echo [OK] Datos descargados y guardados en data.json.
-
-
-
-
-
-
-
-
-:: ===================================================================
-
-
-::                    PASO 3 de 3: EJECUCION
-
-
-:: ===================================================================
-
-
-echo.
-
-
 echo [INFO] Todo listo para arrancar la aplicacion.
 
-
-
-
-
 echo.
-
-
 echo    *********************************************************
 
-
 echo.    *                                                       *
-
 
 echo.    *    La aplicacion se esta iniciando ahora...           *
 
-
 echo.    *                                                       *
-
 
 echo.    *    Cuando arranque, abre tu navegador web y ve a:     *
 
-
 echo.    *                                                       *
-
 
 echo.    *    http://127.0.0.1:5000                              *
 
-
 echo.    *                                                       *
-
 
 echo.    *********************************************************
 
-
 echo.
-
-
 echo [IMPORTANTE] Para detener la aplicacion, simplemente cierra esta ventana.
 
-
-
-
-
 echo.
-
-
-
-
-
-
 
 
 :: Ejecutar la aplicación Flask
-
-
-
-
-
-
-
-
-py muestra_sin_fallos\app.py
-
-
-
-
-
-
+py app.py
 
 
 :: Mensaje final por si el servidor se detiene solo
-
-
 echo.
-
-
 echo La aplicacion se ha detenido.
-
-
 pause

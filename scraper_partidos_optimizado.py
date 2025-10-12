@@ -1,4 +1,4 @@
-# scraper_con_selenium.py
+# scraper_partidos_optimizado.py
 import datetime
 import time
 import sys
@@ -35,7 +35,7 @@ session_instance = None
 session_lock = threading.Lock()
 
 # --- FUNCIÓN DE PARSEO (Idéntica a la tuya, es el método de extracción correcto) ---
-def parse_match_data_from_html(html_content, limit=20):
+def parse_match_data_from_html(html_content):
     """
     Esta función es la misma que la de tu script scraper_partidos.py.
     Utiliza BeautifulSoup para extraer los datos, lo cual es un método
@@ -106,7 +106,7 @@ def parse_match_data_from_html(html_content, limit=20):
         })
 
     upcoming_matches.sort(key=lambda x: x['time_utc'])
-    return upcoming_matches[:limit]
+    return upcoming_matches[:20]
 
 # --- FUNCIÓN PARA CONFIGURAR LA SESIÓN HTTP (Inspirada en estudio.py) ---
 def get_requests_session():
@@ -197,43 +197,7 @@ def fetch_page_content_with_requests(url):
         print(f"Ocurrió un error inesperado al cargar la página con requests: {e}")
         return None
 
-# --- FUNCIÓN PARA MOSTRAR PARTIDOS ---
-def display_matches(matches, title):
-    print(f"\n{title}")
-    print(f"Se encontraron {len(matches)} partidos.")
-    if not matches:
-        print("No se encontraron partidos.")
-        return
-    
-    # Definir algunos colores ANSI para las competiciones
-    colors = [
-        '\033[91m',  # Rojo
-        '\033[92m',  # Verde
-        '\033[93m',  # Amarillo
-        '\033[94m',  # Azul
-        '\033[95m',  # Magenta
-        '\033[96m',  # Cian
-        '\033[97m',  # Blanco
-    ]
-    reset_color = '\033[0m'
-    
-    # Crear un diccionario para asignar colores a las competiciones
-    league_colors = {}
-    color_index = 0
-    
-    for match in matches:
-        # Asignar un color a la competición si no tiene uno
-        if match['league'] not in league_colors:
-            league_colors[match['league']] = colors[color_index % len(colors)]
-            color_index += 1
-        
-        # Obtener el color para esta competición
-        league_color = league_colors[match['league']]
-        
-        # Imprimir el partido con el color de la competición
-        print(f"ID: {match['id']}, Hora UTC: {match['time_utc']}, Hora Madrid: {match['time_madrid']}, {match['home_team']} vs {match['away_team']}, Handicap: {match['handicap']}, Goles: {match['goal_line']}, Competición: {league_color}{match['league']}{reset_color}")
-
-# --- FUNCIÓN PRINCIPAL (Con optimizaciones y opciones para cargar más partidos) ---
+# --- FUNCIÓN PRINCIPAL (Con optimizaciones) ---
 def main():
     print("Iniciando el scraper optimizado...")
     
@@ -250,31 +214,41 @@ def main():
             print("No se pudo obtener el contenido de la página ni con requests ni con Selenium.")
             return
         
-        # Parsear los datos de partidos con diferentes límites
-        next_20_matches = parse_match_data_from_html(html_content, 20)
-        next_10_matches = parse_match_data_from_html(html_content, 10)
-        next_5_matches = parse_match_data_from_html(html_content, 5)
+        # Parsear los datos de partidos
+        next_20_matches = parse_match_data_from_html(html_content)
 
-        # Mostrar los primeros 5 partidos
-        display_matches(next_5_matches, "--- PRÓXIMOS 5 PARTIDOS ENCONTRADOS ---")
-        
-        # Preguntar al usuario si quiere cargar más partidos
-        print("\n¿Quieres cargar más partidos?")
-        print("1. Cargar 10 partidos")
-        print("2. Cargar 20 partidos")
-        print("3. Salir")
-        
-        choice = input("Selecciona una opción (1, 2 o 3): ")
-        
-        if choice == "1":
-            display_matches(next_10_matches, "\n--- PRÓXIMOS 10 PARTIDOS ENCONTRADOS ---")
-        elif choice == "2":
-            display_matches(next_20_matches, "\n--- PRÓXIMOS 20 PARTIDOS ENCONTRADOS ---")
-        elif choice == "3":
-            print("Saliendo...")
+        print(f"\nSe encontraron {len(next_20_matches)} partidos próximos.")
+        print("\n--- PRÓXIMOS 20 PARTIDOS ENCONTRADOS ---\n")
+        if not next_20_matches:
+            print("No se encontraron próximos partidos.")
         else:
-            print("Opción no válida. Mostrando 5 partidos por defecto.")
-            display_matches(next_5_matches, "\n--- PRÓXIMOS 5 PARTIDOS ENCONTRADOS ---")
+            # Definir algunos colores ANSI para las competiciones
+            colors = [
+                '\033[91m',  # Rojo
+                '\033[92m',  # Verde
+                '\033[93m',  # Amarillo
+                '\033[94m',  # Azul
+                '\033[95m',  # Magenta
+                '\033[96m',  # Cian
+                '\033[97m',  # Blanco
+            ]
+            reset_color = '\033[0m'
+            
+            # Crear un diccionario para asignar colores a las competiciones
+            league_colors = {}
+            color_index = 0
+            
+            for match in next_20_matches:
+                # Asignar un color a la competición si no tiene uno
+                if match['league'] not in league_colors:
+                    league_colors[match['league']] = colors[color_index % len(colors)]
+                    color_index += 1
+                
+                # Obtener el color para esta competición
+                league_color = league_colors[match['league']]
+                
+                # Imprimir el partido con el color de la competición
+                print(f"ID: {match['id']}, Hora UTC: {match['time_utc']}, Hora Madrid: {match['time_madrid']}, {match['home_team']} vs {match['away_team']}, Handicap: {match['handicap']}, Goles: {match['goal_line']}, Competición: {league_color}{match['league']}{reset_color}")
         
         print("\n--- FIN DE LA EXTRACCIÓN ---")
 
